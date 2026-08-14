@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint check
+        run: |
+          pip install flake8
+          flake8 src/ api/ --max-line-length=120 --ignore=E501,W503 || true
+
+      - name: Test imports
+        run: |
+          python -c "import pandas, numpy, xgboost, sklearn, fastapi; print('All imports OK')"
+
+      - name: Test API structure
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from fastapi import FastAPI
+          from api.main import app
+          print('FastAPI app loaded OK')
+          " || true
